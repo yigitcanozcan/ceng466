@@ -82,7 +82,7 @@ def bilinear_rotate(img, degree):
 
     return rotated_img
 
-
+'''
 def bilinear_scale(img, scale):
     # Normal scaling takes too much time, so I used vectorized version of my code. WHY????
 
@@ -135,6 +135,7 @@ def bilinear_scale(img, scale):
                              d * x_weight * y_weight)
 
     return scaled_img
+'''
 
 # Interpolation kernel
 def u(s,a):
@@ -144,7 +145,7 @@ def u(s,a):
         return a*(abs(s)**3)-(5*a)*(abs(s)**2)+(8*a)*abs(s)-4*a
     return 0
 
-#Paddnig
+#Padding
 def padding(img,H,W,C):
     zimg = np.zeros((H+4,W+4,C))
     zimg[2:H+2,2:W+2,:C] = img
@@ -166,7 +167,6 @@ def bicubic_rotate(img, degree, a=-0.5):
 
     # Padding the image to handle edges
     img = padding(img, H, W, C)
-
     # Calculate the center of the original image
     cx, cy = W // 2, H // 2
 
@@ -182,12 +182,13 @@ def bicubic_rotate(img, degree, a=-0.5):
     for c in range(C):
         for j in range(H):
             for i in range(W):
+                v, w = i - cx, j - cy
                 # Backward rotation to get the original coordinates
-                x_new = (i - cx) * cos_angle + (j - cy) * sin_angle + cx
-                y_new = -(i - cx) * sin_angle + (j - cy) * cos_angle + cy
+                x_new = v * cos_angle + w * sin_angle + cx
+                y_new = -v * sin_angle + w * cos_angle + cy
 
                 # Bicubic interpolation
-                if 1 <= x_new < W-2 and 1 <= y_new < H-2:
+                if 1 <= x_new <= W and 1 <= y_new <= H:
                     x1 = 1 + x_new - math.floor(x_new)
                     x2 = x_new - math.floor(x_new)
                     x3 = math.floor(x_new) + 1 - x_new
@@ -199,13 +200,14 @@ def bicubic_rotate(img, degree, a=-0.5):
                     y4 = math.floor(y_new) + 2 - y_new
 
                     mat_l = np.matrix([[u(x1,a),u(x2,a),u(x3,a),u(x4,a)]])
-                    mat_m = np.matrix([[img[int(y_new - y1), int(x_new - x1), c], img[int(y_new - y2), int(x_new - x1), c], img[int(y_new + y3), int(x_new - x1), c], img[int(y_new + y4), int(x_new - x1), c]],
-                                       [img[int(y_new - y1), int(x_new - x2), c], img[int(y_new - y2), int(x_new - x2), c], img[int(y_new + y3), int(x_new - x2), c], img[int(y_new + y4), int(x_new - x2), c]],
-                                       [img[int(y_new - y1), int(x_new + x3), c], img[int(y_new - y2), int(x_new + x3), c], img[int(y_new + y3), int(x_new + x3), c], img[int(y_new + y4), int(x_new + x3), c]],
-                                       [img[int(y_new - y1), int(x_new + x4), c], img[int(y_new - y2), int(x_new + x4), c], img[int(y_new + y3), int(x_new + x4), c], img[int(y_new + y4), int(x_new + x4), c]]])
+                    mat_m = np.matrix([[img[round(y_new - y1), round(x_new - x1), c], img[round(y_new - y2), round(x_new - x1), c], img[round(y_new + y3), round(x_new - x1), c], img[round(y_new + y4), round(x_new - x1), c]],
+                                       [img[round(y_new - y1), round(x_new - x2), c], img[round(y_new - y2), round(x_new - x2), c], img[round(y_new + y3), round(x_new - x2), c], img[round(y_new + y4), round(x_new - x2), c]],
+                                       [img[round(y_new - y1), round(x_new + x3), c], img[round(y_new - y2), round(x_new + x3), c], img[round(y_new + y3), round(x_new + x3), c], img[round(y_new + y4), round(x_new + x3), c]],
+                                       [img[round(y_new - y1), round(x_new + x4), c], img[round(y_new - y2), round(x_new + x4), c], img[round(y_new + y3), round(x_new + x4), c], img[round(y_new + y4), round(x_new + x4), c]]])
 
                     mat_r = np.matrix([[u(y1,a)], [u(y2,a)], [u(y3,a)], [u(y4,a)]])
                     rotated_img[j, i, c] = np.dot(np.dot(mat_l, mat_m), mat_r)
+
 
                     # Print progress
                     inc = inc + 1
@@ -216,7 +218,7 @@ def bicubic_rotate(img, degree, a=-0.5):
     print("Rotation completed.")
     return rotated_img
 
-
+'''
 def bicubic_scale(img, scale, a=-0.5):
     #Get image size
     H,W,C = img.shape
@@ -235,34 +237,34 @@ def bicubic_scale(img, scale, a=-0.5):
             for i in range(dW):
                 x, y = i * h + 2 , j * h + 2
 
-                if 1 <= x < W - 2 and 1 <= y < H - 2:
-                    x1 = 1 + x - math.floor(x)
-                    x2 = x - math.floor(x)
-                    x3 = math.floor(x) + 1 - x
-                    x4 = math.floor(x) + 2 - x
+                x1 = 1 + x - math.floor(x)
+                x2 = x - math.floor(x)
+                x3 = math.floor(x) + 1 - x
+                x4 = math.floor(x) + 2 - x
 
-                    y1 = 1 + y - math.floor(y)
-                    y2 = y - math.floor(y)
-                    y3 = math.floor(y) + 1 - y
-                    y4 = math.floor(y) + 2 - y
+                y1 = 1 + y - math.floor(y)
+                y2 = y - math.floor(y)
+                y3 = math.floor(y) + 1 - y
+                y4 = math.floor(y) + 2 - y
 
-                    mat_l = np.matrix([[u(x1,a),u(x2,a),u(x3,a),u(x4,a)]])
-                    mat_m = np.matrix([[img[int(y-y1),int(x-x1),c],img[int(y-y2),int(x-x1),c],img[int(y+y3),int(x-x1),c],img[int(y+y4),int(x-x1),c]],
-                                       [img[int(y-y1),int(x-x2),c],img[int(y-y2),int(x-x2),c],img[int(y+y3),int(x-x2),c],img[int(y+y4),int(x-x2),c]],
-                                       [img[int(y-y1),int(x+x3),c],img[int(y-y2),int(x+x3),c],img[int(y+y3),int(x+x3),c],img[int(y+y4),int(x+x3),c]],
-                                       [img[int(y-y1),int(x+x4),c],img[int(y-y2),int(x+x4),c],img[int(y+y3),int(x+x4),c],img[int(y+y4),int(x+x4),c]]])
-                    mat_r = np.matrix([[u(y1,a)],[u(y2,a)],[u(y3,a)],[u(y4,a)]])
-                    scaled_img[j, i, c] = np.dot(np.dot(mat_l, mat_m),mat_r)
+                mat_l = np.matrix([[u(x1,a),u(x2,a),u(x3,a),u(x4,a)]])
+                mat_m = np.matrix([[img[round(y - y1), round(x - x1), c], img[round(y - y2), round(x - x1), c], img[round(y + y3), round(x - x1), c], img[round(y + y4), round(x - x1), c]],
+                                   [img[round(y - y1), round(x - x2), c], img[round(y - y2), round(x - x2), c], img[round(y + y3), round(x - x2), c], img[round(y + y4), round(x - x2), c]],
+                                   [img[round(y - y1), round(x + x3), c], img[round(y - y2), round(x + x3), c], img[round(y + y3), round(x + x3), c], img[round(y + y4), round(x + x3), c]],
+                                   [img[round(y - y1), round(x + x4), c], img[round(y - y2), round(x + x4), c], img[round(y + y3), round(x + x4), c], img[round(y + y4), round(x + x4), c]]])
 
-                    inc = inc + 1
-                    sys.stderr.write('\r\033[K' + get_progressbar_str(inc / (C * dH * dW)))
-                    sys.stderr.flush()
+                mat_r = np.matrix([[u(y1,a)],[u(y2,a)],[u(y3,a)],[u(y4,a)]])
+                scaled_img[j, i, c] = np.dot(np.dot(mat_l, mat_m),mat_r)
+
+                inc = inc + 1
+                sys.stderr.write('\r\033[K' + get_progressbar_str(inc / (C * dH * dW)))
+                sys.stderr.flush()
     sys.stderr.write('\n')
     sys.stderr.flush()
 
     print("Scaling completed.")
     return scaled_img
-
+'''
 
 # For trimming the edges after backward rotation. In order to prevent aggressive trimming we add a threshold value also.
 def trim(im, bg_color=(0, 0, 0), threshold=20):
@@ -295,13 +297,13 @@ def trim(im, bg_color=(0, 0, 0), threshold=20):
 def rotate_upsample(img, scale, degree, interpolation_type):
     if interpolation_type == 'linear':
         rotated_img = bilinear_rotate(img, degree)
-        rotated_img = trim(rotated_img)
-        scaled_img = bilinear_scale(rotated_img, scale)
+        scaled_img = cv2.resize(rotated_img, (img.shape[1]*scale, img.shape[0]*scale), interpolation=cv2.INTER_LINEAR)
+        scaled_img = trim(scaled_img)
 
     elif interpolation_type == 'cubic':
         rotated_img = bicubic_rotate(img, degree)
-        #rotated_img = trim(rotated_img)
-        scaled_img = bicubic_scale(rotated_img, scale)
+        scaled_img = cv2.resize(rotated_img, (img.shape[1] * scale, img.shape[0] * scale), interpolation=cv2.INTER_CUBIC)
+        scaled_img = trim(scaled_img)
 
     else:
         raise ValueError("Invalid interpolation type")
@@ -309,10 +311,26 @@ def rotate_upsample(img, scale, degree, interpolation_type):
     return scaled_img
 
 def compute_distance(img1, img2):
-    if img1.shape != img2.shape:
-        raise ValueError("Images must have the same shape.")
+    # Find centers of both images
+    #center_y1, center_x1 = img1.shape[0] // 2, img1.shape[1] // 2
+    #center_y2, center_x2 = img2.shape[0] // 2, img2.shape[1] // 2
 
-    distance = np.mean((img1 - img2) ** 2)
+    # Determine the smaller dimensions
+    min_height = min(img1.shape[0], img2.shape[0])
+    min_width = min(img1.shape[1], img2.shape[1])
+
+    # Calculate coordinates to crop around the top left
+    y_start = 0
+    y_end = min_height-1
+    x_start = 0
+    x_end = min_width-1
+
+    # Crop images to the common top left region
+    cropped_img1 = img1[y_start:y_end, x_start:x_end]
+    cropped_img2 = img2[y_start:y_end, x_start:x_end]
+
+    # Compute mean squared difference
+    distance = np.mean((cropped_img1 - cropped_img2) ** 2)
     return distance
 
 if __name__ == '__main__':
@@ -330,17 +348,19 @@ if __name__ == '__main__':
     write_image(corrected_img_cubic, 'q1_1_corrected_cubic.png')
 
     # Report the distances
-    #print('The distance between original image and image corrected with linear interpolation is ', compute_distance(img_original, img_original))
-    # print('The distance between original image and image corrected with cubic interpolation is ', compute_distance(img_original, corrected_img_cubic))
+    print("Distance 1:")
+    print('The distance between original image and image corrected with linear interpolation is ', compute_distance(img_original, corrected_img_linear))
+    print('The distance between original image and image corrected with cubic interpolation is ', compute_distance(img_original, corrected_img_cubic))
 
     # Repeat the same steps for the second image
-    #img_original = read_image('q1_2.png')
-    #img = read_image('ratio_8_degree_45.png')
-    #corrected_img_linear = rotate_upsample(img, 8, 45, 'linear')
-    #write_image(corrected_img_linear, 'q1_2_corrected_linear.png')
-    #corrected_img_cubic = rotate_upsample(img, 8, 45, 'cubic')
-    #write_image(corrected_img_cubic, 'q1_2_corrected_cubic.png')
+    img_original = read_image('q1_2.png')
+    img = read_image('ratio_8_degree_45.png')
+    corrected_img_linear = rotate_upsample(img, 8, 45, 'linear')
+    write_image(corrected_img_linear, 'q1_2_corrected_linear.png')
+    corrected_img_cubic = rotate_upsample(img, 8, 45, 'cubic')
+    write_image(corrected_img_cubic, 'q1_2_corrected_cubic.png')
 
     # Report the distances
-    # print('The distance between original image and image corrected with linear interpolation is ', compute_distance(img_original, corrected_img_linear))
-    # print('The distance between original image and image corrected with cubic interpolation is ', compute_distance(img_original, corrected_img_cubic))
+    print("Distance 2:")
+    print('The distance between original image and image corrected with linear interpolation is ', compute_distance(img_original, corrected_img_linear))
+    print('The distance between original image and image corrected with cubic interpolation is ', compute_distance(img_original, corrected_img_cubic))
