@@ -1,0 +1,68 @@
+def desert_or_forest(img):
+    '''img: image to be classified as desert or forest
+    return a string: either 'desert'  or 'forest'
+
+    You should compare the KL Divergence between histograms of hue channel. Please provide images and discuss these histograms in your report'''
+    desert1 = read_image('desert1.jpg')
+    desert2 = read_image('desert2.jpg')
+    forest1 = read_image('forest1.jpg')
+    forest2 = read_image('forest2.jpg')
+
+    return result
+
+def difference_images(img1, img2):
+    '''img1 and img2 are the images to take dhe difference
+    returns the masked image'''
+
+    return masked_image
+
+
+
+###################### Q1
+    # Read original image
+    img_original = read_image('q1_1.png')
+    # Read corrupted image
+    img = read_image('ratio_4_degree_30.png')
+    # Correct the image with linear interpolation
+    corrected_img_linear = rotate_upsample(img, 4, 30, 'linear')
+    write_image(corrected_img_linear, 'q1_1_corrected_linear.png')
+
+    # Correct the image with cubic interpolation
+    #corrected_img_cubic = rotate_upsample(img, 4, 30, 'cubic')
+    #write_image(corrected_img_cubic, 'q1_1_corrected_cubic.png')
+
+    # Report the distances
+    #print('The distance between original image and image corrected with linear interpolation is ', compute_distance(img_original, corrected_img_linear))
+    #print('The distance between original image and image corrected with cubic interpolation is ', compute_distance(img_original, corrected_img_cubic))
+
+    # Repeat the same steps for the second image
+    img_original = read_image('q1_2.png')
+    img = read_image('ratio_8_degree_45.png')
+    corrected_img_linear = rotate_upsample(img, 8, 45, 'linear')
+    write_image(corrected_img_linear, 'q1_2_corrected_linear.png')
+    #corrected_img_cubic = rotate_upsample(img, 8, 45, 'cubic')
+    #write_image(corrected_img_cubic, 'q1_2_corrected_cubic.png')
+
+    # Report the distances
+    #print('The distance between original image and image corrected with linear interpolation is ', compute_distance(img_original, corrected_img_linear))
+    #print('The distance between original image and image corrected with cubic interpolation is ', compute_distance(img_original, corrected_img_cubic))
+
+###################### Q2
+    img = read_image('q2_1.jpg')
+    result = desert_or_forest(img)
+    print("Given image q2_1 is an image of a ", result)
+
+    img = read_image('q2_2.jpg')
+    result = desert_or_forest(img)
+    print("Given image q2_2 is an image of a ", result)
+
+    ###################### Q3
+    img1 = read_image('q3_a1.png',gray_scale=True)
+    img2 = read_image('q3_a2.png',gray_scale=True)
+    result = difference_images(img1,img2)
+    write_image(result, 'masked_image_a.png')
+
+    img1 = read_image('q3_b1.png')
+    img2 = read_image('q3_b2.png')
+    result = difference_images(img1,img2)
+    write_image(result, 'masked_image_b.png')
