@@ -20,12 +20,12 @@ def write_image(img, filename):
     cv2.imwrite(output_folder+filename, img)
 
 def hue_calc(img):
-    # divide R G B channels
-    red = img[:, :, 0].astype(float) / 255  # Convert to float and normalize
+    # divide B G R channels
+    blue = img[:, :, 0].astype(float) / 255  # Convert to float and normalize
     green = img[:, :, 1].astype(float) / 255
-    blue = img[:, :, 2].astype(float) / 255
+    red = img[:, :, 2].astype(float) / 255
 
-    hue_img = np.copy(red)  # Just initialize it with the shape of red
+    hue_img = np.copy(blue)  # Just initialize it with the shape of blue
     height = img.shape[0]
     width = img.shape[1]
 
@@ -63,7 +63,7 @@ def plot_histogram(hist, bins):
     plt.title("Hue Histogram")
     plt.show()
 
-def kl_divergence(hue, image, num_bins=180):
+def kl_divergence(hue, image):
     # Step 1: Calculate the hue matrix of the image
     image_hue = hue_calc(image)
 
@@ -71,9 +71,8 @@ def kl_divergence(hue, image, num_bins=180):
     hue_hist, _ = histogram_calc(hue)
     image_hue_hist, _ = histogram_calc(image_hue)
 
-    # Step 3: Normalize the histograms to form probability distributions
-    P = hue_hist / np.sum(hue_hist)
-    Q = image_hue_hist / np.sum(image_hue_hist)
+    P = hue_hist
+    Q = image_hue_hist
 
     # Step 4: Calculate KL divergence (add small value to avoid log(0))
     epsilon = 1e-10  # A small constant to avoid division by zero
@@ -105,7 +104,7 @@ def desert_or_forest(img):
     elif fd1 < dd1 and fd1 < dd2 and fd2 < dd1 and fd2 < dd2:
         return "forest"
     else:
-        raise "Cannot be decided if it is desert or forest :("
+        return "Cannot decide whether it is desert or forest."
 
 if __name__ == '__main__':
     ###################### Q2
