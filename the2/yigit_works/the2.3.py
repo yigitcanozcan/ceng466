@@ -29,14 +29,23 @@ def write_image(img, filename):
     # CV2 is just a suggestion you can use other libraries as well
     if os.path.exists(output_folder) == False:
         os.makedirs(output_folder)
-    cv2.imwrite(output_folder + filename, img)
+    cv2.imwrite(output_folder + filename, img, [cv2.IMWRITE_JPEG_QUALITY, 90])
 
 
 
 def apply_compression(image_path, output_prefix, n_values):
     # Read grayscale image
     image = read_image(image_path, gray_scale=True)
+    write_image(image, f"{output_prefix}_original.jpg")
+    original_size = os.path.getsize(output_folder + f"{output_prefix}_original.jpg") / 1024
     rows, cols = image.shape
+
+    results = {}
+
+    # Store the original size and resolution
+    results["Resolution Original:"] = image.shape
+    results["Size Original:"] = original_size
+    results["n_results"] = {}
 
     # Haar Wavelet Transform
     coeffs = pywt.dwt2(image, 'haar')
@@ -44,8 +53,6 @@ def apply_compression(image_path, output_prefix, n_values):
 
     # Discrete Cosine Transform (DCT)
     image_dct = dct(dct(image.T, norm='ortho').T, norm='ortho')
-
-    results = {}
 
     for n in n_values:
         # Haar Wavelet Compression
@@ -60,16 +67,20 @@ def apply_compression(image_path, output_prefix, n_values):
         mse_haar = mean_squared_error(image, compressed_haar)
         mse_dct = mean_squared_error(image, reconstructed_dct)
 
-        # Save compressed images
+        # Save compressed images for visualization (optional)
         write_image(compressed_haar, f"{output_prefix}_haar_{n}.jpg")
         write_image(reconstructed_dct, f"{output_prefix}_dct_{n}.jpg")
+        haar_size = os.path.getsize(output_folder + f"{output_prefix}_haar_{n}.jpg") / 1024
+        dct_size = os.path.getsize(output_folder + f"{output_prefix}_dct_{n}.jpg") / 1024
 
-        # Store results
-        results[n] = {
-            "mse_haar": mse_haar,
-            "mse_dct": mse_dct,
-            "haar_image": compressed_haar,
-            "dct_image": reconstructed_dct
+        # Store results for this N
+        results["n_results"][n] = {
+            "Resolution Haar": compressed_haar.shape,
+            "Resolution DCT": reconstructed_dct.shape,
+            "MSE Haar": mse_haar,
+            "MSE DCT": mse_dct,
+            "Size Haar": haar_size,
+            "Size DCT": dct_size
         }
 
     return results
@@ -94,28 +105,24 @@ def compress_dct(dct_matrix, N):
 
 
 results1 = apply_compression("c1.jpg", "c1", [1, 10, 50])
-results2 = apply_compression("c2.jpg", "c2", [1, 10, 50])
-results3 = apply_compression("c3.jpg", "c3", [1, 10, 50])
+# results2 = apply_compression("c2.jpg", "c2", [1, 10, 50])
+# results3 = apply_compression("c3.jpg", "c3", [1, 10, 50])
 
 # Analyze results
-print("-----------------")
-print("c1.jpg")
-print("-----------------")
-for n, metrics in results1.items():
-    print(f"N = {n}%")
-    print(f"MSE (Haar): {metrics['mse_haar']:.4f}")
-    print(f"MSE (DCT): {metrics['mse_dct']:.4f}")
-print("-----------------")
-print("c2.jpg")
-print("-----------------")
-for n, metrics in results2.items():
-    print(f"N = {n}%")
-    print(f"MSE (Haar): {metrics['mse_haar']:.4f}")
-    print(f"MSE (DCT): {metrics['mse_dct']:.4f}")
-print("-----------------")
-print("c3.jpg")
-print("-----------------")
-for n, metrics in results3.items():
-    print(f"N = {n}%")
-    print(f"MSE (Haar): {metrics['mse_haar']:.4f}")
-    print(f"MSE (DCT): {metrics['mse_dct']:.4f}")
+
+def print_results(results):
+    for index,result in enumerate(results):
+        print("-----------------")
+        print(f"c{index}.jpg")
+        print("-----------------")
+        for k, v in result.items():
+            if k != "n_results":
+                print(f"{k}: {v}")
+        print("---")
+        for n, metrics in result["n_results"].items():
+            print(f"N = {n}%")
+            for k, v in metrics.items():
+                print(f"{k}: {v}")
+            print("---")
+
+print_results([results1])
