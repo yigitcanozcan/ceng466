@@ -1,9 +1,3 @@
-# CENG 466 THE2
-# Mert Uludoğan 2380996
-# Yiğitcan Özcan 2521847
-
-#ISSUE: When N gets bigger the compressed image's size surpasses the original image. WTF?
-
 import numpy as np
 import cv2
 import os
@@ -17,7 +11,6 @@ output_folder = 'THE2_Images/Question3/'
 
 
 def read_image(filename, gray_scale=False):
-    # CV2 is just a suggestion you can use other libraries as well
     if gray_scale:
         img = cv2.imread(input_folder + filename, cv2.IMREAD_GRAYSCALE)
         return img
@@ -26,11 +19,9 @@ def read_image(filename, gray_scale=False):
 
 
 def write_image(img, filename):
-    # CV2 is just a suggestion you can use other libraries as well
-    if os.path.exists(output_folder) == False:
+    if not os.path.exists(output_folder):
         os.makedirs(output_folder)
     cv2.imwrite(output_folder + filename, img, [cv2.IMWRITE_JPEG_QUALITY, 90])
-
 
 
 def apply_compression(image_path, output_prefix, n_values):
@@ -43,8 +34,8 @@ def apply_compression(image_path, output_prefix, n_values):
     results = {}
 
     # Store the original size and resolution
-    results["Resolution Original:"] = image.shape
     results["Size Original:"] = original_size
+    results["JPEG Quality"] = "90%"
     results["n_results"] = {}
 
     # Haar Wavelet Transform
@@ -67,23 +58,24 @@ def apply_compression(image_path, output_prefix, n_values):
         mse_haar = mean_squared_error(image, compressed_haar)
         mse_dct = mean_squared_error(image, reconstructed_dct)
 
-        # Save compressed images for visualization (optional)
-        write_image(compressed_haar, f"{output_prefix}_haar_{n}.jpg")
-        write_image(reconstructed_dct, f"{output_prefix}_dct_{n}.jpg")
-        haar_size = os.path.getsize(output_folder + f"{output_prefix}_haar_{n}.jpg") / 1024
-        dct_size = os.path.getsize(output_folder + f"{output_prefix}_dct_{n}.jpg") / 1024
+        # Calculate Normalized MSE
+        normalized_mse_haar = (mse_haar / (255 ** 2)) * 100
+        normalized_mse_dct = (mse_dct / (255 ** 2)) * 100
+
+        # Calculate PSNR
+        psnr_haar = 10 * np.log10((255 ** 2) / mse_haar) if mse_haar > 0 else float('inf')
+        psnr_dct = 10 * np.log10((255 ** 2) / mse_dct) if mse_dct > 0 else float('inf')
 
         # Store results for this N
         results["n_results"][n] = {
-            "Resolution Haar": compressed_haar.shape,
-            "Resolution DCT": reconstructed_dct.shape,
-            "MSE Haar": mse_haar,
-            "MSE DCT": mse_dct,
-            "Size Haar": haar_size,
-            "Size DCT": dct_size
+            "Normalized MSE Haar (%)": normalized_mse_haar,
+            "Normalized MSE DCT (%)": normalized_mse_dct,
+            "PSNR Haar (dB)": psnr_haar,
+            "PSNR DCT (dB)": psnr_dct
         }
 
     return results
+
 
 def compress_wavelet(coeffs, N):
     """Compress wavelet coefficients by retaining top N%."""
@@ -96,6 +88,7 @@ def compress_wavelet(coeffs, N):
     cD = np.where(np.abs(cD) < threshold, 0, cD)
     return cA, (cH, cV, cD)
 
+
 def compress_dct(dct_matrix, N):
     """Compress DCT coefficients by retaining top N%."""
     coeffs_flat = dct_matrix.flatten()
@@ -105,15 +98,14 @@ def compress_dct(dct_matrix, N):
 
 
 results1 = apply_compression("c1.jpg", "c1", [1, 10, 50])
-# results2 = apply_compression("c2.jpg", "c2", [1, 10, 50])
-# results3 = apply_compression("c3.jpg", "c3", [1, 10, 50])
+results2 = apply_compression("c2.jpg", "c2", [1, 10, 50])
+results3 = apply_compression("c3.jpg", "c3", [1, 10, 50])
 
 # Analyze results
-
 def print_results(results):
-    for index,result in enumerate(results):
+    for index, result in enumerate(results):
         print("-----------------")
-        print(f"c{index}.jpg")
+        print(f"c{index+1}.jpg")
         print("-----------------")
         for k, v in result.items():
             if k != "n_results":
@@ -125,4 +117,4 @@ def print_results(results):
                 print(f"{k}: {v}")
             print("---")
 
-print_results([results1])
+print_results([results1, results2, results3])

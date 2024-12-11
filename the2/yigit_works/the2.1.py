@@ -35,9 +35,9 @@ def write_image(img, filename):
 img1 = read_image("a1.png", gray_scale=True)
 img2 = read_image("a2.png", gray_scale=True)
 
-# Save grayscale images
-write_image(img1, "grayscale_a1.png")
-write_image(img2, "grayscale_a2.png",)
+# # Save grayscale images
+# write_image(img1, "grayscale_a1.png")
+# write_image(img2, "grayscale_a2.png")
 
 # Define custom kernels
 roberts_x = np.array([[1, 0], [0, -1]])
@@ -63,28 +63,30 @@ def apply_filters(img, prefix):
     write_image(roberts, f"{prefix}_roberts.png")
     write_image(prewitt, f"{prefix}_prewitt.png")
 
+
 apply_filters(img1, "a1")
 apply_filters(img2, "a2")                     #step 1 and step 2 completed.
 
 def blur_images(img, prefix):
+    blurred_images = []
     for k in [3, 5, 7]:
         blurred = cv2.GaussianBlur(img, (k, k), 0)
-        write_image(blurred, f"{prefix}_blurred_k{k}.png")
+        blurred_images.append(blurred)
 
-blur_images(img1, "a1")
-blur_images(img2, "a2")                         #step 3
+    return blurred_images
+
+img1_blurred_ones = blur_images(img1, "a1")
+img2_blurred_ones = blur_images(img2, "a2")                         
 
 #step 4
-for k in [3, 5, 7]:
-    img1_blurred = read_image(f"a1_blurred_k{k}.png", gray_scale=True)
-    img2_blurred = read_image(f"a2_blurred_k{k}.png", gray_scale=True)
-    apply_filters(img1_blurred, f"a1_blurred_k{k}_filtered")
-    apply_filters(img2_blurred, f"a2_blurred_k{k}_filtered")
+for blurred_1, blurred_2, k in zip(img1_blurred_ones, img2_blurred_ones, [3, 5, 7]):
+    apply_filters(blurred_1, f"a1_blurred_k{k}_filtered")
+    apply_filters(blurred_2, f"a2_blurred_k{k}_filtered")
+
 
 #step 5
 def binarize_msb(img, prefix):
     msb_img = ((img >> 7) & 1) * 255  # Extract MSB and scale to 0-255
-    write_image(msb_img, f"{prefix}_msb.jpg")
     return msb_img
 
 msb_img1 = binarize_msb(img1, "a1")
@@ -95,12 +97,10 @@ apply_filters(msb_img1, "a1_msb")
 apply_filters(msb_img2, "a2_msb")
 
 #step 7
-blur_images(msb_img1, "a1_msb")
-blur_images(msb_img2, "a2_msb")
+msb_img1_blurred_ones = blur_images(msb_img1, "a1_msb")
+msb_img2_blurred_ones = blur_images(msb_img2, "a2_msb")
 
 #step 8
-for k in [3, 5, 7]:
-    img1_msb_blurred = read_image(f"a1_msb_blurred_k{k}.png", gray_scale=True)
-    img2_msb_blurred = read_image(f"a2_msb_blurred_k{k}.png", gray_scale=True)
-    apply_filters(img1_msb_blurred, f"a1_msb_blurred_k{k}")
-    apply_filters(img2_msb_blurred, f"a2_msb_blurred_k{k}")
+for msb_img1_blurred, msb_img2_blurred, k in zip(msb_img1_blurred_ones, msb_img2_blurred_ones, [3, 5, 7]):
+    apply_filters(msb_img1_blurred, f"a1_msb_blurred_k{k}")
+    apply_filters(msb_img2_blurred, f"a2_msb_blurred_k{k}")
