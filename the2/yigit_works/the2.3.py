@@ -1,3 +1,8 @@
+
+# CENG 466 THE2
+# Mert Uludoğan 2380996
+# Yiğitcan Özcan 2521847
+
 import numpy as np
 import cv2
 import os
@@ -49,10 +54,13 @@ def apply_compression(image_path, output_prefix, n_values):
         # Haar Wavelet Compression
         haar_coeffs = compress_wavelet((cA, (cH, cV, cD)), n)
         compressed_haar = pywt.idwt2(haar_coeffs, 'haar')
-
+        write_image(compressed_haar, f"{output_prefix}_haar_{n}.jpg")
+        haar_size = os.path.getsize(output_folder + f"{output_prefix}_haar_{n}.jpg") / 1024
         # Discrete Cosine Transform Compression
         dct_compressed = compress_dct(image_dct, n)
         reconstructed_dct = idct(idct(dct_compressed.T, norm='ortho').T, norm='ortho')
+        write_image(reconstructed_dct, f"{output_prefix}_dct_{n}.jpg")
+        dct_size = os.path.getsize(output_folder + f"{output_prefix}_dct_{n}.jpg") / 1024
 
         # Compute MSE
         mse_haar = mean_squared_error(image, compressed_haar)
@@ -68,6 +76,8 @@ def apply_compression(image_path, output_prefix, n_values):
 
         # Store results for this N
         results["n_results"][n] = {
+            "Size Haar": haar_size,
+            "Size DCT": dct_size,
             "Normalized MSE Haar (%)": normalized_mse_haar,
             "Normalized MSE DCT (%)": normalized_mse_dct,
             "PSNR Haar (dB)": psnr_haar,
