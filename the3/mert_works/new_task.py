@@ -52,6 +52,7 @@ class Pipeline:
     MIN_OBJECT_SIZE = 50       # minimum object size in pixels to keep
     FILL_HOLES_SIZE = 50       # remove small holes up to this size
 
+    orig_img = None
     save_folder = None
     log = None
     postfix = None
@@ -98,23 +99,37 @@ class Pipeline:
         return img
 
     def save_result(self, img):
-        # Create a figure with two subplots: one for the text log and one for the image
-        fig, axes = plt.subplots(nrows=2, figsize=(6, 8))
+        # Create a figure with a 2x2 grid:
+        # Top row for text (left) and empty space (right),
+        # Bottom row for original image (left) and segmented image (right).
+        fig, axes = plt.subplots(nrows=2, ncols=2, figsize=(10, 8))
         
-        # Top subplot for the log text
-        axes[0].axis('off')
-        axes[0].text(0.5, 0.5, self.log,
-                     horizontalalignment='center',
-                     verticalalignment='center',
-                     fontsize=12,
-                     transform=axes[0].transAxes)
+        # Top-left subplot for the log text
+        axes[0,0].axis('off')
+        axes[0,0].text(0.5, 0.5, self.log,
+                    horizontalalignment='center',
+                    verticalalignment='center',
+                    fontsize=12,
+                    transform=axes[0,0].transAxes)
         
-        # Bottom subplot for the image
-        axes[1].imshow(img, cmap='gray')
-        axes[1].axis('off')
+        # Top-right subplot is unused, turn it off
+        axes[0,1].axis('off')
         
-        # Adjust spacing between subplots
+        # Bottom-left subplot for the original image
+        # Convert BGR (OpenCV format) to RGB for matplotlib display if needed
+        orig_rgb = cv2.cvtColor(self.orig_img, cv2.COLOR_BGR2RGB)
+        axes[1,0].imshow(orig_rgb)
+        axes[1,0].set_title("Original Image")
+        axes[1,0].axis('off')
+        
+        # Bottom-right subplot for the segmented image
+        axes[1,1].imshow(img, cmap='gray')
+        axes[1,1].set_title("Segmented Image")
+        axes[1,1].axis('off')
+        
+        # Adjust spacing
         plt.tight_layout()
+        
         # Save the figure to a file
         seg_folder = os.path.join(self.save_folder, self.SEG_METHOD.value)
         os.makedirs(seg_folder, exist_ok=True)
@@ -122,7 +137,9 @@ class Pipeline:
         plt.savefig(save_path)
         plt.close(fig)
 
+
     def preprocessing(self, img, apply_blur=True, apply_clahe=True):
+        self.postfix = f"_blur_{self.BLUR_KERNEL_SIZE}_clahe_{self.CLAHE_CLIP_LIMIT}_{self.CLAHE_TILE_SIZE}" + self.postfix
         # Convert to grayscale for certain steps (like CLAHE)
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
@@ -240,6 +257,7 @@ class Pipeline:
         img_path = os.path.join(IMG_FOLDER, img_name)
         img = Pipeline.load_image(img_path)
 
+        self.orig_img = img
         seg_result = self.run_segmentation_pipeline(img)
 
 
@@ -248,62 +266,179 @@ def experiment_1():
 
     pipelines = []
 
-    # Parameter sets for Morphological segmentation
+    # Preprocessing parameters
+    blur_kernel_sizes = [(3, 3), (5, 5)]
+    clahe_clip_limits = [2.0, 4.0]
+    clahe_tile_sizes = [(8, 8), (16, 16)]
+
+    # -------------------------------------
+    # Morphological Segmentation Parameters
+    # -------------------------------------
     morph_kernel_sizes = [3, 5]
     morph_iterations_list = [1, 2]
     morph_elements = [cv2.MORPH_ELLIPSE, cv2.MORPH_RECT]
 
-    # Create pipelines for Morphological segmentation
-    for kernel_size in morph_kernel_sizes:
-        for iteration in morph_iterations_list:
-            for element in morph_elements:
-                p = Pipeline(
-                    morph_kernel_size=kernel_size,
-                    morph_iterations=iteration,
-                    morph_element=element,
-                    seg_method=SEGMENTATION_METHOD.GRAYSCALE_MORPHOLOGY
-                )
-                pipelines.append(p)
+    for blur_ksize in blur_kernel_sizes:
+        for clahe_clip in clahe_clip_limits:
+            for clahe_tile in clahe_tile_sizes:
+                for kernel_size in morph_kernel_sizes:
+                    for iteration in morph_iterations_list:
+                        for element in morph_elements:
+                            p = Pipeline(
+                                morph_kernel_size=kernel_size,
+                                morph_iterations=iteration,
+                                morph_element=element,
+                                blur_kernel_size=blur_ksize,
+                                clahe_clip_limit=clahe_clip,
+                                clahe_tile_size=clahe_tile,
+                                seg_method=SEGMENTATION_METHOD.GRAYSCALE_MORPHOLOGY
+                            )
+                            pipelines.append(p)
 
-    # Parameter sets for KMeans RGB segmentation
-    kmeans_clusters_list = [2, 3]         # Different numbers of clusters
-    kmeans_inits = ['k-means++', 'random']  # Different initialization methods
+    # -------------------------------------
+    # KMeans RGB Segmentation Parameters
+    # -------------------------------------
+    kmeans_clusters_list = [2, 3]
+    kmeans_inits = ['k-means++', 'random']
 
-    # Create pipelines for KMeans RGB segmentation
-    for clusters in kmeans_clusters_list:
-        for init_method in kmeans_inits:
-            p = Pipeline(
-                kmeans_clusters=clusters,
-                kmeans_init=init_method,
-                seg_method=SEGMENTATION_METHOD.KMEANS_RGB
-            )
-            pipelines.append(p)
+    for blur_ksize in blur_kernel_sizes:
+        for clahe_clip in clahe_clip_limits:
+            for clahe_tile in clahe_tile_sizes:
+                for clusters in kmeans_clusters_list:
+                    for init_method in kmeans_inits:
+                        p = Pipeline(
+                            kmeans_clusters=clusters,
+                            kmeans_init=init_method,
+                            blur_kernel_size=blur_ksize,
+                            clahe_clip_limit=clahe_clip,
+                            clahe_tile_size=clahe_tile,
+                            seg_method=SEGMENTATION_METHOD.KMEANS_RGB
+                        )
+                        pipelines.append(p)
 
-    # Parameter sets for KMeans LBP segmentation
-    # For LBP, we can vary the radius and points, or just radius if we like.
+    # -------------------------------------
+    # KMeans LBP Segmentation Parameters
+    # -------------------------------------
     lbp_radius_list = [1, 2]
-    # Points is typically 8*radius, but we could also try variations
-    # For simplicity, let’s just set points based on radius
-    lbp_methods = ['uniform', 'nri_uniform']  # Different LBP methods if desired
+    lbp_methods = ['uniform', 'nri_uniform']
 
-    # Create pipelines for KMeans LBP segmentation
-    for radius in lbp_radius_list:
-        points = 8 * radius
-        for lbp_method in lbp_methods:
-            p = Pipeline(
-                kmeans_lbp_radius=radius,
-                kmeans_lbp_points=points,
-                kmeans_lbp_method=lbp_method,
-                seg_method=SEGMENTATION_METHOD.KMEANS_LBP
-            )
-            pipelines.append(p)
+    for blur_ksize in blur_kernel_sizes:
+        for clahe_clip in clahe_clip_limits:
+            for clahe_tile in clahe_tile_sizes:
+                for radius in lbp_radius_list:
+                    points = 8 * radius
+                    for lbp_method in lbp_methods:
+                        p = Pipeline(
+                            kmeans_lbp_radius=radius,
+                            kmeans_lbp_points=points,
+                            kmeans_lbp_method=lbp_method,
+                            blur_kernel_size=blur_ksize,
+                            clahe_clip_limit=clahe_clip,
+                            clahe_tile_size=clahe_tile,
+                            seg_method=SEGMENTATION_METHOD.KMEANS_LBP
+                        )
+                        pipelines.append(p)
 
     # Now run all pipelines
     for pipeline_obj in pipelines:
+        pipeline_obj:Pipeline
         pipeline_obj.run_pipeline(img_name)
+
+
+def full_experiment():
+
+    img_paths = [
+        "1.png",
+        "2.png",
+        "3.png",
+        "4.png",
+        "5.png",
+        "6.png"
+    ]
+
+    pipelines = []
+
+    # Preprocessing parameters
+    blur_kernel_sizes = [(3, 3), (5, 5)]
+    clahe_clip_limits = [2.0, 4.0]
+    clahe_tile_sizes = [(8, 8), (16, 16)]
+
+    # -------------------------------------
+    # Morphological Segmentation Parameters
+    # -------------------------------------
+    morph_kernel_sizes = [3, 5]
+    morph_iterations_list = [1, 2]
+    morph_elements = [cv2.MORPH_ELLIPSE, cv2.MORPH_RECT]
+
+    for blur_ksize in blur_kernel_sizes:
+        for clahe_clip in clahe_clip_limits:
+            for clahe_tile in clahe_tile_sizes:
+                for kernel_size in morph_kernel_sizes:
+                    for iteration in morph_iterations_list:
+                        for element in morph_elements:
+                            p = Pipeline(
+                                morph_kernel_size=kernel_size,
+                                morph_iterations=iteration,
+                                morph_element=element,
+                                blur_kernel_size=blur_ksize,
+                                clahe_clip_limit=clahe_clip,
+                                clahe_tile_size=clahe_tile,
+                                seg_method=SEGMENTATION_METHOD.GRAYSCALE_MORPHOLOGY
+                            )
+                            pipelines.append(p)
+
+    # -------------------------------------
+    # KMeans RGB Segmentation Parameters
+    # -------------------------------------
+    kmeans_clusters_list = [2, 3]
+    kmeans_inits = ['k-means++', 'random']
+
+    for blur_ksize in blur_kernel_sizes:
+        for clahe_clip in clahe_clip_limits:
+            for clahe_tile in clahe_tile_sizes:
+                for clusters in kmeans_clusters_list:
+                    for init_method in kmeans_inits:
+                        p = Pipeline(
+                            kmeans_clusters=clusters,
+                            kmeans_init=init_method,
+                            blur_kernel_size=blur_ksize,
+                            clahe_clip_limit=clahe_clip,
+                            clahe_tile_size=clahe_tile,
+                            seg_method=SEGMENTATION_METHOD.KMEANS_RGB
+                        )
+                        pipelines.append(p)
+
+    # -------------------------------------
+    # KMeans LBP Segmentation Parameters
+    # -------------------------------------
+    lbp_radius_list = [1, 2]
+    lbp_methods = ['uniform', 'nri_uniform']
+
+    for blur_ksize in blur_kernel_sizes:
+        for clahe_clip in clahe_clip_limits:
+            for clahe_tile in clahe_tile_sizes:
+                for radius in lbp_radius_list:
+                    points = 8 * radius
+                    for lbp_method in lbp_methods:
+                        p = Pipeline(
+                            kmeans_lbp_radius=radius,
+                            kmeans_lbp_points=points,
+                            kmeans_lbp_method=lbp_method,
+                            blur_kernel_size=blur_ksize,
+                            clahe_clip_limit=clahe_clip,
+                            clahe_tile_size=clahe_tile,
+                            seg_method=SEGMENTATION_METHOD.KMEANS_LBP
+                        )
+                        pipelines.append(p)
+
+    # Now run all pipelines
+    for img_name in img_paths:
+        for pipeline_obj in pipelines:
+            pipeline_obj:Pipeline
+            pipeline_obj.run_pipeline(img_name)
 
     
 
 if __name__ == "__main__":
     # Example: Perform morphology-based segmentation
-    experiment_1()
+    full_experiment()
