@@ -26,7 +26,7 @@ def contrast_stretching(image):
     stretched = ((image - min_val) / (max_val - min_val) * 255).astype(np.uint8)
     return stretched
 
-def display_results(images, titles):
+def display_results_morph(images, titles):
     plt.figure(figsize=(20, 15))
     for i, (img, title) in enumerate(zip(images, titles)):
         plt.subplot(1, len(images), i + 1)
@@ -36,6 +36,25 @@ def display_results(images, titles):
     plt.tight_layout()
     plt.show()
 
+def display_results_rgb(titles, images):
+    plt.figure(figsize=(20, 8))
+    for i, (title, img) in enumerate(zip(titles, images)):
+        plt.subplot(1, len(images), i + 1)
+        plt.title(title)
+        plt.imshow(img)
+        plt.axis('off')
+    plt.tight_layout()
+    plt.show()
+
+def display_results_lbp(titles, images, cmap='gray'):
+    plt.figure(figsize=(20, 8))
+    for i, (title, img) in enumerate(zip(titles, images)):
+        plt.subplot(1, len(images), i + 1)
+        plt.title(title)
+        plt.imshow(img, cmap=cmap)
+        plt.axis('off')
+    plt.tight_layout()
+    plt.show()
 
 # TASK 1
 def rug_pattern_morph(image_path, lower_bound_pattern, upper_bound_background, object_l, background_l, gradient_sigma):
@@ -282,7 +301,7 @@ try:
     # Process the image
     im_color1, im_inv1, im_gradient1, markers1, labels1 = rug_pattern_morph(image_path1, 10, 150, 7, 3, 2)
     # Display results
-    display_results(
+    display_results_morph(
         [im_color1, im_inv1, im_gradient1, markers1.astype('int'), labels1],
         ["Image", "Inverted Image", "Image Gradient", "Markers", "Watershed Segmentation"]
     )
@@ -294,7 +313,7 @@ try:
     # Process the image
     im_color2, im_inv2, im_gradient2, markers2, labels2 = rug_pattern_morph(image_path2, 40, 180, 7, 3, 2.5)
     # Display results
-    display_results(
+    display_results_morph(
         [im_color2, im_inv2, im_gradient2, markers2.astype('int'), labels2],
         ["Image", "Inverted Image", "Image Gradient", "Markers", "Watershed Segmentation"]
     )
@@ -308,7 +327,7 @@ try:
         image_path3, 1.33, 20, 3)
 
     # Display the results
-    display_results(
+    display_results_morph(
         [original, edges, binary_mask],
         ["Original Image", "Gradient", "Wrinkle Mask"]
     )
@@ -322,7 +341,7 @@ try:
         image_path4, 2, 20, 3)
 
     # Display the results
-    display_results(
+    display_results_morph(
         [original, edges, binary_mask],
         ["Original Image", "Gradient", "Wrinkle Mask"]
     )
@@ -335,7 +354,7 @@ try:
     original, edges, line_image, rgb = zipper_finder(image_path5, 50, 150, 3)
 
     # Display the results
-    display_results(
+    display_results_morph(
         [original, edges, line_image, rgb],
         ["Original Image", "Canny Edges", "Detected Lines (Zipper)", "RGB"]
     )
@@ -347,7 +366,7 @@ try:
     original, edges, line_image, rgb = zipper_finder(image_path6, 100, 200, 7)
 
     # Display the results
-    display_results(
+    display_results_morph(
         [original, edges, line_image, rgb],
         ["Original Image", "Canny Edges", "Detected Lines (Zipper)", "RGB"]
     )
@@ -369,7 +388,7 @@ masked_segment = mask_segment_rgb(original, labels, target_cluster=1)
 # Display Results
 titles = ["Original Image", "Preprocessed Image", "Segmented Image", "Masked Segment"]
 images = [original, preprocessed, segmented_image, masked_segment]
-display_results(titles, images)
+display_results_rgb(titles, images)
 
 # Preprocessing
 original, preprocessed = preprocess_image(image_path2, 3)
@@ -383,7 +402,7 @@ masked_segment = mask_segment_rgb(original, labels, target_cluster=1)
 # Display Results
 titles = ["Original Image", "Preprocessed Image", "Segmented Image", "Masked Segment"]
 images = [original, preprocessed, segmented_image, masked_segment]
-display_results(titles, images)
+display_results_rgb(titles, images)
 
 
 # Preprocessing
@@ -399,7 +418,7 @@ masked_segment = mask_segment_enhanced_rgb(original, labels, target_clusters)
 # Display Results
 titles = ["Original Image", "Preprocessed Image", "Segmented Image", "Masked Segment"]
 images = [original, preprocessed, segmented_image, masked_segment]
-display_results(titles, images)
+display_results_rgb(titles, images)
 
 
 # Preprocessing
@@ -415,7 +434,7 @@ masked_segment = mask_segment_enhanced_rgb(original, labels, target_clusters)
 # Display Results
 titles = ["Original Image", "Preprocessed Image", "Segmented Image", "Masked Segment"]
 images = [original, preprocessed, segmented_image, masked_segment]
-display_results(titles, images)
+display_results_rgb(titles, images)
 
 
 # Preprocessing
@@ -430,7 +449,7 @@ masked_segment = mask_segment_rgb(original, labels, target_cluster=0)
 # Display Results
 titles = ["Original Image", "Preprocessed Image", "Segmented Image", "Masked Segment"]
 images = [original, preprocessed, segmented_image, masked_segment]
-display_results(titles, images)
+display_results_rgb(titles, images)
 
 
 # Preprocessing
@@ -446,7 +465,7 @@ masked_segment = mask_segment_enhanced_rgb(original, labels, target_clusters)
 # Display Results
 titles = ["Original Image", "Preprocessed Image", "Segmented Image", "Masked Segment"]
 images = [original, preprocessed, segmented_image, masked_segment]
-display_results(titles, images)
+display_results_rgb(titles, images)
 
 
 
@@ -468,7 +487,7 @@ masked_segment = mask_segment_enhanced_lbp(original_rgb, labels, target_clusters
 # Display Results
 titles = ["Smoothed Image", "LBP Image", "Clustered", "Masked segment"]
 images = [smoothed, lbp_image, clustered, masked_segment]
-display_results(titles, images)
+display_results_lbp(titles, images)
 
 
 # Load the grayscale image
@@ -488,7 +507,7 @@ masked_segment = mask_segment_enhanced_lbp(original_rgb, labels, target_clusters
 # Display Results
 titles = ["Smoothed Image", "LBP Image", "Clustered", "Masked segment"]
 images = [smoothed, lbp_image, clustered, masked_segment]
-display_results(titles, images)
+display_results_lbp(titles, images)
 
 
 # Load the grayscale image
@@ -508,7 +527,7 @@ masked_segment = mask_segment_enhanced_lbp(original_rgb, labels, target_clusters
 # Display Results
 titles = ["Smoothed Image", "LBP Image", "Clustered", "Masked segment"]
 images = [smoothed, lbp_image, clustered, masked_segment]
-display_results(titles, images)
+display_results_lbp(titles, images)
 
 
 # Load the grayscale image
@@ -530,7 +549,7 @@ masked_segment = mask_segment_enhanced_lbp(original_rgb, labels, target_clusters
 # Display Results
 titles = ["Smoothed Image", "LBP Image (dilated)", "Clustered", "Masked segment"]
 images = [smoothed, lbp_image, clustered, masked_segment]
-display_results(titles, images)
+display_results_lbp(titles, images)
 
 
 # Load the grayscale image
@@ -556,7 +575,7 @@ masked_segment = mask_segment_enhanced_lbp(original_rgb, labels, target_clusters
 # Display Results
 titles = ["Smoothed Image", "LBP Image (dilated)", "Clustered", "Masked segment"]
 images = [smoothed, lbp_image, clustered, masked_segment]
-display_results(titles, images)
+display_results_lbp(titles, images)
 
 
 # Load the grayscale image
@@ -581,4 +600,4 @@ masked_segment = mask_segment_enhanced_lbp(original_rgb, labels, target_clusters
 # Display Results
 titles = ["Smoothed (+ pixel adjusted) Image", "LBP Image (dilated)", "Clustered", "Masked segment"]
 images = [smoothed, lbp_image, clustered, masked_segment]
-display_results(titles, images)
+display_results_lbp(titles, images)
