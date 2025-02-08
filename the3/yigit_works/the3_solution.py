@@ -40,7 +40,8 @@ class Task1():
         pass
 
     def run(self):
-        def display_results(images, titles):
+
+        def display_results(images, titles, fig_title="Results Overview"):
             # You can change these values as needed:
             fig_width = 12     # Figure width in inches
             fig_height = 8     # Figure height in inches
@@ -50,19 +51,14 @@ class Task1():
             nrows = math.ceil(len(images) / ncols)
 
             # Create the grid of subplots
-            fig, axes = plt.subplots(nrows=nrows, 
-                                    ncols=ncols, 
-                                    figsize=(fig_width, fig_height))
+            fig, axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(fig_width, fig_height))
 
             # If nrows==1 or ncols==1, axes may be 1D; make it 1D either way for easy iteration
-            if nrows == 1 and ncols == 1:
-                axes = [axes]
-            elif nrows == 1:
-                axes = axes  # already 1D
-            elif ncols == 1:
-                axes = axes  # already 1D
+            if nrows == 1 or ncols == 1:
+                axes = axes.flatten()  # make sure axes is always 1D array
+
+            # Flatten the 2D array of axes to 1D
             else:
-                # Flatten the 2D array of axes to 1D
                 axes = axes.ravel()
 
             for i, (img, title) in enumerate(zip(images, titles)):
@@ -74,9 +70,13 @@ class Task1():
             for j in range(len(images), len(axes)):
                 axes[j].set_visible(False)
 
-            # Make layout tight so rows and columns are nicely spaced
-            plt.tight_layout()
+            # Add the main title to the figure
+            fig.suptitle(fig_title, fontsize=20)
+
+            # Adjust layout to make room for the main title and prevent overlap
+            plt.tight_layout(rect=[0, 0.03, 1, 0.95])  # Adjust these values as needed
             plt.show()
+
 
         def save_results(images, titles, save_path):
             # You can change these values as needed:
@@ -220,6 +220,8 @@ class Task1():
         # os.makedirs("results")
 
         # Test the outputs
+        title = "Grayscale Morphology"
+
         image_path1 = "THE3_Images/1.png"
         try:
             # Process the image
@@ -229,7 +231,8 @@ class Task1():
             # Display results
             display_results(
                 [im_color1, im_inv1, im_gradient1, markers1, masked_image1],
-                ["Image", "Inverted Image", "Image Gradient", "Markers", "Masked Image"]
+                ["Image", "Inverted Image", "Image Gradient", "Markers", "Masked Image"],
+                title+" - Image 1"
             )
             # save_results(
             #     [im_color1, im_inv1, im_gradient1, markers1, masked_image1],
@@ -248,7 +251,8 @@ class Task1():
             # Display results
             display_results(
                 [im_color2, im_inv2, im_gradient2, markers2, masked_image2],
-                ["Image", "Inverted Image", "Image Gradient", "Markers", "Masked Image"]
+                ["Image", "Inverted Image", "Image Gradient", "Markers", "Masked Image"],
+                title+" - Image 2"
             )
             # save_results(
             #     [im_color2, im_inv2, im_gradient2, markers2, masked_image2],
@@ -267,7 +271,8 @@ class Task1():
             # Display the results
             display_results(
                 [original, edges, binary_mask],
-                ["Original Image", "Gradient", "Wrinkle Mask"]
+                ["Original Image", "Gradient", "Wrinkle Mask"],
+                title+" - Image 3"
             )
             # save_results(
             #     [original, edges, binary_mask],
@@ -286,7 +291,8 @@ class Task1():
             # Display the results
             display_results(
                 [original, edges, binary_mask],
-                ["Original Image", "Gradient", "Wrinkle Mask"]
+                ["Original Image", "Gradient", "Wrinkle Mask"],
+                title+" - Image 4"
             )
             # save_results(
             #     [original, edges, binary_mask],
@@ -303,7 +309,8 @@ class Task1():
             # Display the results
             display_results(
                 [original, edges, line_image, rgb],
-                ["Original Image", "Canny Edges", "Detected Lines (Zipper)", "RGB"]
+                ["Original Image", "Canny Edges", "Detected Lines (Zipper)", "RGB"],
+                title+" - Image 5"
             )
             # save_results(
             #     [original, edges, line_image, rgb],
@@ -320,7 +327,8 @@ class Task1():
             # Display the results
             display_results(
                 [original, edges, line_image, rgb],
-                ["Original Image", "Canny Edges", "Detected Lines (Zipper)", "RGB"]
+                ["Original Image", "Canny Edges", "Detected Lines (Zipper)", "RGB"],
+                title+" - Image 6"
             )
             # save_results(
             #     [original, edges, line_image, rgb],
@@ -350,7 +358,6 @@ class Task2():
 
             return original, stretched
 
-
         def apply_kmeans(image, n_clusters=3):
             # Reshape the image into a 2D array of pixels with 3 RGB features
             pixels = image.reshape((-1, 3))
@@ -370,7 +377,6 @@ class Task2():
             segmented_image = segmented_pixels.reshape(image.shape)
 
             return segmented_image, labels.reshape(image.shape[:2])
-
 
         def mask_segment(original, labels, target_cluster):
             # Create a binary mask for the target cluster
@@ -399,18 +405,31 @@ class Task2():
 
             return masked_image
 
-
-        def display_results(titles, images):
+        def display_results(titles, images, fig_title="Results Overview"):
+            # Create the figure with specified size
             plt.figure(figsize=(20, 8))
+            
+            # Loop through each title and image pair
             for i, (title, img) in enumerate(zip(titles, images)):
+                # Create a subplot for each image
                 plt.subplot(1, len(images), i + 1)
+                # Set the title for each subplot
                 plt.title(title)
+                # Display the image
                 plt.imshow(img)
+                # Turn off axis labels
                 plt.axis('off')
-            plt.tight_layout()
+            
+            # Adjust the layout to make room for the main title
+            plt.tight_layout(rect=[0, 0, 1, 0.95])  # Adjust these values if necessary
+
+            # Set a title for the entire figure
+            plt.suptitle(fig_title, fontsize=20)
+
+            # Show the figure
             plt.show()
 
-
+        title = "KMeans Clustering"
         # Test the outputs
         image_path1 = "THE3_Images/1.png"
 
@@ -426,7 +445,7 @@ class Task2():
         # Display Results
         titles = ["Original Image", "Preprocessed Image", "Segmented Image", "Masked Segment"]
         images = [original, preprocessed, segmented_image, masked_segment]
-        display_results(titles, images)
+        display_results(titles, images, title+" - Image 1")
 
         image_path2 = "THE3_Images/2.png"
 
@@ -442,7 +461,7 @@ class Task2():
         # Display Results
         titles = ["Original Image", "Preprocessed Image", "Segmented Image", "Masked Segment"]
         images = [original, preprocessed, segmented_image, masked_segment]
-        display_results(titles, images)
+        display_results(titles, images, title+" - Image 2")
 
 
         image_path3 = "THE3_Images/3.png"
@@ -460,7 +479,7 @@ class Task2():
         # Display Results
         titles = ["Original Image", "Preprocessed Image", "Segmented Image", "Masked Segment"]
         images = [original, preprocessed, segmented_image, masked_segment]
-        display_results(titles, images)
+        display_results(titles, images, title+" - Image 3")
 
         image_path4 = "THE3_Images/4.png"
 
@@ -477,7 +496,7 @@ class Task2():
         # Display Results
         titles = ["Original Image", "Preprocessed Image", "Segmented Image", "Masked Segment"]
         images = [original, preprocessed, segmented_image, masked_segment]
-        display_results(titles, images)
+        display_results(titles, images, title+" - Image 4")
 
         image_path5 = "THE3_Images/5.png"
 
@@ -493,7 +512,7 @@ class Task2():
         # Display Results
         titles = ["Original Image", "Preprocessed Image", "Segmented Image", "Masked Segment"]
         images = [original, preprocessed, segmented_image, masked_segment]
-        display_results(titles, images)
+        display_results(titles, images, title+" - Image 5")
 
         image_path6 = "THE3_Images/6.png"
         target_clusters = [2,3]
@@ -510,7 +529,7 @@ class Task2():
         # Display Results
         titles = ["Original Image", "Preprocessed Image", "Segmented Image", "Masked Segment"]
         images = [original, preprocessed, segmented_image, masked_segment]
-        display_results(titles, images)
+        display_results(titles, images, title+" - Image 6")
 
         # 6.png is the hardest one, because of the shadows :(
 
@@ -573,16 +592,28 @@ class Task3():
 
             return masked_image
 
-
-
-        def display_results(titles, images, cmap='gray'):
+        def display_results(titles, images, cmap='gray', fig_title="Results Overview"):
+            # Create the figure with specified size
             plt.figure(figsize=(20, 8))
+            
+            # Loop through each title and image pair
             for i, (title, img) in enumerate(zip(titles, images)):
+                # Create a subplot for each image
                 plt.subplot(1, len(images), i + 1)
+                # Set the title for each subplot
                 plt.title(title)
+                # Display the image with the specified color map
                 plt.imshow(img, cmap=cmap)
+                # Turn off axis labels
                 plt.axis('off')
-            plt.tight_layout()
+            
+            # Adjust the layout to make room for the main title
+            plt.tight_layout(rect=[0, 0, 1, 0.95])  # Adjust these values if necessary
+
+            # Set a title for the entire figure
+            plt.suptitle(fig_title, fontsize=20)
+
+            # Show the figure
             plt.show()
 
 
@@ -611,7 +642,7 @@ class Task3():
 
             return adjusted_image
 
-
+        title = "LBP Features"
 
         # Test the outputs
 
@@ -634,7 +665,7 @@ class Task3():
         # Display Results
         titles = ["Smoothed Image", "LBP Image", "Clustered", "Masked segment"]
         images = [smoothed, lbp_image, clustered, masked_segment]
-        display_results(titles, images)
+        display_results(titles, images, fig_title=title+" - Image 1")
 
 
         image_path2 = "THE3_Images/2.png"  # Replace with your image path
@@ -656,7 +687,7 @@ class Task3():
         # Display Results
         titles = ["Smoothed Image", "LBP Image", "Clustered", "Masked segment"]
         images = [smoothed, lbp_image, clustered, masked_segment]
-        display_results(titles, images)
+        display_results(titles, images, fig_title=title+" - Image 2")
 
         image_path3 = "THE3_Images/3.png"  # Replace with your image path
 
@@ -677,7 +708,7 @@ class Task3():
         # Display Results
         titles = ["Smoothed Image", "LBP Image", "Clustered", "Masked segment"]
         images = [smoothed, lbp_image, clustered, masked_segment]
-        display_results(titles, images)
+        display_results(titles, images, fig_title=title+" - Image 3")
 
         image_path4 = "THE3_Images/4.png"  # Replace with your image path
 
@@ -700,7 +731,7 @@ class Task3():
         # Display Results
         titles = ["Smoothed Image", "LBP Image (dilated)", "Clustered", "Masked segment"]
         images = [smoothed, lbp_image, clustered, masked_segment]
-        display_results(titles, images)
+        display_results(titles, images, fig_title=title+" - Image 4")
 
 
         image_path5 = "THE3_Images/5.png"  # Replace with your image path
@@ -728,7 +759,7 @@ class Task3():
         # Display Results
         titles = ["Smoothed Image", "LBP Image (dilated)", "Clustered", "Masked segment"]
         images = [smoothed, lbp_image, clustered, masked_segment]
-        display_results(titles, images)
+        display_results(titles, images, fig_title=title+" - Image 5")
 
 
         image_path6 = "THE3_Images/6.png"  # Replace with your image path
@@ -755,7 +786,7 @@ class Task3():
         # Display Results
         titles = ["Smoothed (+ pixel adjusted) Image", "LBP Image (dilated)", "Clustered", "Masked segment"]
         images = [smoothed, lbp_image, clustered, masked_segment]
-        display_results(titles, images)
+        display_results(titles, images, fig_title=title+" - Image 6")
 
 
 
