@@ -1,0 +1,9 @@
+problem: we need to get rid of the darkness for the rotation, how?
+solution: after backwards rotation we need to detect the pure black parts in edges. trim function to the rescue!!!
+    problem of trim: we cannot get height x width in pixels, how can we compare distances later?
+                        eliminate the 'same shape' requirement!
+                        maybe we should compare distances but when we are closer to edges of
+                        our image, we can use smaller we can ignore them
+
+                     or better, we can calculate according to smaller value ex: 4040 x 3016 vs 4032 x 3024 -> get abs(width1 - width2) and abs(height1 - height2) 8
+                                                                                dont care about first and lat 4 pixels :) will it work?
